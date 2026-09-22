@@ -2,13 +2,128 @@
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/700.css';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'SFMono-Regular', monospace;
+
+  /* --- Thème clair (défaut) --- */
+  --color-abyss: #f4f7f4;
+  --color-panel: #ffffff;
+  --color-panel-2: #eef3ee;
+  --color-line: #e3eae4;
+  --color-line-2: #16302a;
+
+  --color-neon: #12b981;
+  --color-neon-dim: #0f9d6c;
+  --color-cyber: #3b82f6;
+  --color-ink: #14241d;
+  --color-muted: #687d73;
+  --color-warn: #c26b0a;
+  --color-alert: #e6294f;
+}
+
+/* --- Thème sombre --- */
+.dark {
+  --color-abyss: #0a120e;
+  --color-panel: #0f1a14;
+  --color-panel-2: #17241d;
+  --color-line: #20362c;
+  --color-line-2: #2f4a3e;
+
+  --color-neon: #34e39b;
+  --color-neon-dim: #17b87e;
+  --color-cyber: #60a5fa;
+  --color-ink: #e6f2ea;
+  --color-muted: #7d9488;
+  --color-warn: #fbbf24;
+  --color-alert: #fb7185;
+
+  color-scheme: dark;
 }
 
 @layer base {
-  html,
   body {
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    color: var(--color-ink);
+    background-color: var(--color-abyss);
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-neon) 30%, transparent);
+  }
+
+  * {
+    scrollbar-color: var(--color-line) var(--color-abyss);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl bg-panel;
+    border: 1px solid var(--color-line);
+    box-shadow:
+      0 1px 2px rgba(15, 40, 31, 0.05),
+      0 16px 40px -20px rgba(15, 40, 31, 0.18);
+  }
+
+  .neon-copy {
+    color: var(--color-neon);
+  }
+
+  .cyber-copy {
+    color: var(--color-cyber);
+  }
+
+  .tag {
+    @apply font-mono text-xs uppercase tracking-widest;
+  }
+
+  .titlebar {
+    @apply flex items-center;
+  }
+
+  .lbl {
+    @apply mb-2 block font-mono text-xs uppercase tracking-widest;
+    color: var(--color-muted);
+  }
+
+  .field {
+    @apply w-full rounded-xl bg-panel px-3 py-2.5 text-sm outline-none transition;
+    border: 1px solid var(--color-line);
+    color: var(--color-ink);
+  }
+
+  .field::placeholder {
+    color: color-mix(in srgb, var(--color-muted) 55%, transparent);
+  }
+
+  .field:focus {
+    border-color: var(--color-neon);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-neon) 15%, transparent);
+  }
+
+  .btn-neon {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-55;
+    background: var(--color-neon-dim);
+    box-shadow: 0 6px 16px -6px rgba(15, 157, 108, 0.5);
+  }
+
+  .btn-neon:hover {
+    background: var(--color-neon);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition;
+    border: 1px solid var(--color-line);
+    background: var(--color-panel);
+    color: var(--color-ink);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--color-cyber);
+    color: var(--color-cyber);
+    background: color-mix(in srgb, var(--color-cyber) 6%, var(--color-panel));
   }
 }
