@@ -27,14 +27,6 @@ const themeOptions: { value: Theme; label: string; hint: string }[] = [
   { value: 'dark', label: 'Sombre', hint: 'Interface sombre' },
 ]
 
-const timezones = [
-  'Europe/Paris',
-  'Europe/London',
-  'UTC',
-  'America/New_York',
-  'America/Toronto',
-  'Asia/Tokyo',
-]
 
 const toggleSpan =
   'peer-checked:before:translate-x-6 flex h-6 w-11 items-center rounded-full border border-line bg-panel-2 transition before:h-4 before:w-4 before:translate-x-1 before:rounded-full before:bg-muted before:transition-transform peer-checked:border-neon peer-checked:bg-neon/15 peer-checked:before:bg-neon peer-focus-visible:ring-2 peer-focus-visible:ring-neon/30'
@@ -88,45 +80,6 @@ export default function Parameters() {
                 </span>
               </button>
             ))}
-          </div>
-        </section>
-
-        <section className="card p-5">
-          <h2 className="titlebar text-sm font-bold tracking-widest text-ink">
-            Langue et affichage
-          </h2>
-
-          <div className="mt-4">
-            <label htmlFor="language" className="lbl">
-              Langue
-            </label>
-            <select
-              id="language"
-              className="field"
-              value={prefs.language}
-              onChange={(e) => update('language', e.target.value as Settings['language'])}
-            >
-              <option value="fr">Français</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-
-          <div className="mt-4">
-            <label htmlFor="timezone" className="lbl">
-              Fuseau horaire
-            </label>
-            <select
-              id="timezone"
-              className="field"
-              value={prefs.timezone}
-              onChange={(e) => update('timezone', e.target.value)}
-            >
-              {timezones.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-            </select>
           </div>
         </section>
 
