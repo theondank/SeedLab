@@ -75,6 +75,7 @@ jobs:
           name: seedlab-front-dist
           path: dist
 
+
       - name: Configurer l'authentification SSH
         run: |
           mkdir -p ~/.ssh
