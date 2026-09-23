@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { LuRefreshCw } from 'react-icons/lu'
+import { LuRefreshCw, LuWand } from 'react-icons/lu'
 import type { CapteurStatus } from '../types/sensor'
-import { sensorService } from '../services'
+import type { Diagnostic } from '../types/diagnostic'
+import { iaService, sensorService } from '../services'
 import { subscribeWs } from '../services/wsClient'
 
 const formatArrosage = (value: number): string => {
@@ -9,19 +10,31 @@ const formatArrosage = (value: number): string => {
   return `${Math.round(value)} s`
 }
 
+const iaStatusMeta = {
+  vide: { label: 'Diagnostic IA non disponible', classes: 'text-muted' },
+  en_cours: { label: 'Analyse IA en cours…', classes: 'text-cyber' },
+  pret: { label: 'Diagnostic IA disponible', classes: 'text-neon' },
+  erreur: { label: 'Échec de l’analyse IA', classes: 'text-alert' },
+} as const
+
 export default function Sensors() {
   const [status, setStatus] = useState<CapteurStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
     const load = async () => {
       try {
-        const data = await sensorService.getStatus()
+        const [data, iaDiag] = await Promise.all([
+          sensorService.getStatus(),
+          iaService.getDiagnostic(),
+        ])
         if (!cancelled) {
           setStatus(data)
+          setDiagnostic(iaDiag)
           setError(null)
         }
       } catch (err) {
@@ -40,9 +53,14 @@ export default function Sensors() {
       setError(null)
     })
 
+    const unsubscribeIa = subscribeWs<unknown>('ia:diagnostic', (data) => {
+      setDiagnostic(iaService.normaliserDiagnostic(data))
+    })
+
     return () => {
       cancelled = true
       unsubscribe()
+      unsubscribeIa()
     }
   }, [])
 
@@ -83,6 +101,18 @@ export default function Sensors() {
             <span className="tag rounded-md border border-line bg-panel-2/70 px-3 py-1.5 text-muted">
               {status.etat}
             </span>
+            {diagnostic && (
+              <span
+                className={`tag inline-flex items-center gap-2 rounded-md border border-line bg-panel-2/70 px-3 py-1.5 ${iaStatusMeta[diagnostic.statut === 'en_cours' ? 'en_cours' : diagnostic.diagnostic ? 'pret' : 'vide']?.classes ?? 'text-muted'}`}
+              >
+                {diagnostic.statut === 'en_cours' ? (
+                  <LuRefreshCw className="animate-spin" />
+                ) : (
+                  <LuWand />
+                )}
+                {iaStatusMeta[diagnostic.statut === 'en_cours' ? 'en_cours' : diagnostic.diagnostic ? 'pret' : 'vide']?.label}
+              </span>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
