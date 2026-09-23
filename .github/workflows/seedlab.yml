@@ -53,7 +53,7 @@ jobs:
 
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     needs: ci
 
@@ -64,53 +64,30 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v4
 
-      - name: Installer Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - name: Télécharger l'artefact frontend
         uses: actions/download-artifact@v4
         with:
           name: seedlab-front-dist
           path: dist
 
-
-      - name: Configurer l'authentification SSH
+      - name: Déployer le backend
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.DEBIAN_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-      - name: Se connecter au tailnet (Tailscale)
-        uses: tailscale/github-action@v4
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
-
-      - name: Mettre à jour le backend
-        run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o StrictHostKeyChecking=accept-new \
-            "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}" << 'EOF'
-            cd /var/www/seedlab
-            git pull origin main
-            cd seedlab_backend
-            npm ci
-            pm2 restart seedlab-backend || \
-            pm2 start src/server.js --name seedlab-backend
-            pm2 save
-          EOF
+          rsync -av --delete --exclude 'node_modules/' \
+            "$GITHUB_WORKSPACE/seedlab_backend/" \
+            /var/www/seedlab/seedlab_backend/
+          cd /var/www/seedlab/seedlab_backend
+          npm ci
+          pm2 restart seedlab-backend || \
+          pm2 start src/server.js --name seedlab-backend
+          pm2 save
 
       - name: Déployer le frontend
         run: |
-          rsync -avz --delete \
+          rsync -av --delete \
             --exclude '.git/' \
             --exclude 'seedlab_backend/' \
             --exclude 'seedlab-front/' \
-            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new" \
-            dist/ \
-            "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}:/var/www/seedlab/"
+            "$GITHUB_WORKSPACE/dist/" \
+            /var/www/seedlab/
 
           echo "Déploiement terminé."
