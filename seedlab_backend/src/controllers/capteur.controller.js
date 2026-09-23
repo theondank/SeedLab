@@ -1,4 +1,5 @@
 import pool from "../config/database.js";
+import { broadcastCapteur } from "../ws.js";
 
 /**
  * 1. LECTURE (Front-end) : GET /api/capteurs/status
@@ -72,6 +73,8 @@ export const updateSensorData = async (req, res) => {
        ORDER BY id DESC LIMIT 1`,
       [temp, hum, debit_eau, luminosite, etat, new Date()],
     );
+
+    void broadcastCapteur();
 
 
 

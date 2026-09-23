@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { LuRefreshCw } from 'react-icons/lu'
 import { sensorService } from '../services'
+import { subscribeWs } from '../services/wsClient'
+import type { CapteurStatus } from '../types/sensor'
 
 type SensorStatus = 'loading' | 'ok' | 'down'
 
@@ -21,8 +23,13 @@ export default function Home() {
 
     void load()
 
+    const unsubscribe = subscribeWs<CapteurStatus>('capteur:update', (data) => {
+      setStatus(data.online ? 'ok' : 'down')
+    })
+
     return () => {
       cancelled = true
+      unsubscribe()
     }
   }, [])
 

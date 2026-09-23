@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LuPlus, LuRefreshCw, LuX } from 'react-icons/lu'
 import { mapEtatStatus, type Plant, type PlantRecord } from '../types/plant'
 import { plantService } from '../services'
+import { subscribeWs } from '../services/wsClient'
 
 const statusMeta = {
   ok: { label: 'Stable', classes: 'border-neon/40 bg-neon/10 text-neon' },
@@ -47,8 +48,13 @@ export default function Plants() {
 
     void load()
 
+    const unsubscribe = subscribeWs<Plant>('capteur:update', (data) => {
+      setPlant(data)
+    })
+
     return () => {
       cancelled = true
+      unsubscribe()
     }
   }, [])
 

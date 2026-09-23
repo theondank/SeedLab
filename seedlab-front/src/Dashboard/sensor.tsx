@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LuRefreshCw } from 'react-icons/lu'
 import type { CapteurStatus } from '../types/sensor'
 import { sensorService } from '../services'
+import { subscribeWs } from '../services/wsClient'
 
 const formatArrosage = (value: number): string => {
   if (!Number.isFinite(value) || value <= 0) return 'Jamais'
@@ -34,8 +35,14 @@ export default function Sensors() {
 
     void load()
 
+    const unsubscribe = subscribeWs<CapteurStatus>('capteur:update', (data) => {
+      setStatus(data)
+      setError(null)
+    })
+
     return () => {
       cancelled = true
+      unsubscribe()
     }
   }, [])
 
