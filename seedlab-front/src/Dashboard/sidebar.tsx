@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LuChartLine,
   LuDroplets,
@@ -11,6 +11,7 @@ import {
   LuX,
 } from 'react-icons/lu'
 import logo from '../assets/seedlab-logo-trimmed.png'
+import { authService } from '../services'
 
 const navItems = [
   { label: 'Tableau de bord', to: '/dashboard', icon: LuLayoutDashboard },
@@ -28,6 +29,17 @@ type SidebarProps = {
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // déconnexion locale même si le serveur est injoignable
+    }
+    navigate('/')
+  }
+
   return (
     <>
       <div
@@ -77,14 +89,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="border-t border-line p-3">
-          <Link
-            to="/"
-            onClick={onClose}
-            className="flex items-center gap-3 rounded-md border border-line-2 bg-panel-2/60 px-3 py-2.5 text-sm text-muted transition hover:border-alert/50 hover:text-alert"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-md border border-line-2 bg-panel-2/60 px-3 py-2.5 text-sm text-muted transition hover:border-alert/50 hover:text-alert"
           >
             <LuLogOut className="text-lg" />
             Déconnexion
-          </Link>
+          </button>
         </div>
       </aside>
     </>

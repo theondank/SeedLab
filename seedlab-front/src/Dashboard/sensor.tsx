@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { LuRefreshCw } from 'react-icons/lu'
-import type { Sensor } from '../types/sensor'
+import type { CapteurStatus } from '../types/sensor'
 import { sensorService } from '../services'
 
+const formatArrosage = (value: number): string => {
+  if (!Number.isFinite(value) || value <= 0) return 'Jamais'
+  return `${Math.round(value)} s`
+}
+
 export default function Sensors() {
-  const [sensors, setSensors] = useState<Sensor[]>([])
+  const [status, setStatus] = useState<CapteurStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -13,9 +18,9 @@ export default function Sensors() {
 
     const load = async () => {
       try {
-        const data = await sensorService.getSensors()
+        const data = await sensorService.getStatus()
         if (!cancelled) {
-          setSensors(data)
+          setStatus(data)
           setError(null)
         }
       } catch (err) {
@@ -54,49 +59,50 @@ export default function Sensors() {
         </div>
       )}
 
-      {!loading && !error && sensors.length === 0 && (
-        <div className="card p-6 font-mono text-sm text-muted">
-          Aucun capteur connecté au réseau.
-        </div>
-      )}
+      {!loading && !error && status && (
+        <div>
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            {status.online ? (
+              <span className="tag inline-flex items-center gap-2 rounded-md border border-neon/40 bg-neon/10 px-3 py-1.5 text-neon">
+                <span className="h-1.5 w-1.5 rounded-full bg-neon" />
+                Réseau de bacs en ligne
+              </span>
+            ) : (
+              <span className="tag inline-flex items-center gap-2 rounded-md border border-warn/40 bg-warn/10 px-3 py-1.5 text-warn">
+                <span className="h-1.5 w-1.5 rounded-full bg-warn" />
+                Hors-ligne
+              </span>
+            )}
+            <span className="tag rounded-md border border-line bg-panel-2/70 px-3 py-1.5 text-muted">
+              {status.etat}
+            </span>
+          </div>
 
-      {!loading && !error && sensors.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sensors.map(({ id, name, type, unit, lastReading, lastUpdate }) => {
-            const operational = lastReading !== null && lastUpdate !== null
-            return (
-              <article key={id} className="card p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="font-semibold text-ink">{name}</h2>
-                    <p className="mt-0.5 font-mono text-xs uppercase tracking-widest text-muted">
-                      {type}
-                    </p>
-                  </div>
-                  {operational ? (
-                    <span className="tag inline-flex items-center gap-2 rounded-md border border-neon/40 bg-neon/10 px-2.5 py-1 text-neon">
-                      <span className="h-1.5 w-1.5 rounded-full bg-neon" />
-                      En ligne
-                    </span>
-                  ) : (
-                    <span className="tag inline-flex items-center gap-2 rounded-md border border-warn/40 bg-warn/10 px-2.5 py-1 text-warn">
-                      <span className="h-1.5 w-1.5 rounded-full bg-warn" />
-                      Hors-ligne
-                    </span>
-                  )}
-                </div>
-
-                <dl className="mt-5 border-t border-line pt-4 font-mono">
-                  <div className="flex items-baseline justify-between">
-                    <dt className="tag text-muted">Dernier relevé</dt>
-                    <dd className="neon-copy text-lg font-bold">
-                      {operational ? `${lastReading} ${unit}` : 'Aucune donnée'}
-                    </dd>
-                  </div>
-                </dl>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: 'Température',
+                value: `${status.temperature} °C`,
+                accent: 'neon-copy',
+              },
+              { label: 'Humidité sol', value: `${status.humidite} %`, accent: 'cyber-copy' },
+              { label: 'Luminosité', value: `${status.luminosite} lux`, accent: 'neon-copy' },
+              {
+                label: 'Dernier arrosage',
+                value: formatArrosage(status.dernier_arrosage),
+                accent: 'cyber-copy',
+              },
+            ].map(({ label, value, accent }) => (
+              <article key={label} className="card p-5">
+                <p className="tag text-muted">{label}</p>
+                <p className={`${accent} mt-3 text-2xl font-bold`}>{value}</p>
               </article>
-            )
-          })}
+            ))}
+          </div>
+
+          <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
+            Dernière mise à jour : {new Date(status.date_heure).toLocaleString('fr-FR')}
+          </p>
         </div>
       )}
     </div>
