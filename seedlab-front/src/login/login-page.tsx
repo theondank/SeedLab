@@ -165,7 +165,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative hidden overflow-hidden rounded-xl border border-line lg:block">
-        <img src={hero} alt="Serre SeedLab" className="h-full w-full object-cover" />
+        <img src={hero} alt="Serre SeedLab" className="h-205 w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0f251e]/70 via-[#0f251e]/20 to-transparent" />
         <div className="absolute bottom-4 left-4 rounded-lg bg-[#0f251e]/75 px-3 py-2 font-mono text-xs text-[#8af0c6]">
           SeedLab — serre connectée, génération 2080
