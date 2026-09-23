@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LuPlus, LuRefreshCw, LuX, LuWand } from 'react-icons/lu'
+import { LuImageOff, LuPlus, LuRefreshCw, LuSprout, LuX, LuWand } from 'react-icons/lu'
 import { mapEtatStatus, type Plant, type PlantRecord } from '../types/plant'
 import type { Diagnostic } from '../types/diagnostic'
 import { iaService, plantService } from '../services'
@@ -210,7 +210,17 @@ export default function Plants() {
                 onClick={() => setSelected(p)}
                 className="card w-full p-4 text-left transition hover:border-neon/50 hover:shadow-[0_0_18px_rgba(0,255,163,0.08)]"
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="relative h-32 overflow-hidden rounded-md border border-line bg-panel-2/60">
+                  <span className="absolute inset-0 flex items-center justify-center text-muted/70">
+                    <LuSprout className="text-5xl" />
+                  </span>
+                  <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-panel/80 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur-sm">
+                    <LuImageOff className="text-xs" />
+                    Photo à venir
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-3">
                   <span className="font-bold text-ink">{p.nom}</span>
                   <span
                     className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(p.etat)].classes}`}
