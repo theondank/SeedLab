@@ -10,7 +10,7 @@ set -euo pipefail
 GIT_URL="https://github.com/theondank/SeedLab.git"
 BRANCH="main"
 REPO_DIR="/var/www/seedlab"   # dossier du clone git
-WEB_DIR="/var/www/seedlab"    # racine web servie par nginx (où va dist/)
+WEB_DIR="/var/www/html"       # racine web servie par Apache (où va dist/)
 # -----------------------------------------------------------------------------
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
