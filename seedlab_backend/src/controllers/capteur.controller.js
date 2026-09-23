@@ -7,7 +7,7 @@ import { broadcastCapteur } from "../ws.js";
 export const getStatusSensors = async (req, res) => {
   try {
     const [[plant]] = await pool.query(
-      "SELECT * FROM plants ORDER BY id DESC LIMIT 1",
+      "SELECT * FROM plants WHERE temperature IS NOT NULL AND humidite IS NOT NULL ORDER BY id DESC LIMIT 1",
     );
 
     if (!plant) {
