@@ -2,7 +2,8 @@ import express from "express";
 import {
   getStatusSensors,
   updateSensorData,
-} from "../controllers/capteur.controller.Js";
+} from "../controllers/capteur.controller.js";
+
 
 const router = express.Router();
 
