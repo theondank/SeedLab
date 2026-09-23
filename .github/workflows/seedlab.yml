@@ -65,8 +65,8 @@ jobs:
 
       - name: Configurer SSH
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEBIAN_SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "Host configuré : ${{ secrets.DEBIAN_HOST }}"
+          echo "User configuré : ${{ secrets.DEBIAN_USER }}"
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.DEBIAN_HOST }}" >> ~/.ssh/known_hosts
 
