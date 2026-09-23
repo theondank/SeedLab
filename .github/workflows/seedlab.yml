@@ -1,0 +1,100 @@
+name: CI/CD SeedLab
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # FRONT
+      - name: Installer les dépendances frontend
+        working-directory: seedlab-front
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: seedlab-front
+        run: npm run build
+
+      # BACK
+      - name: Installer les dépendances backend
+        working-directory: seedlab_backend
+        run: npm ci
+
+      - name: Vérifier le backend
+        working-directory: seedlab_backend
+        run: node --check src/server.js
+
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: ci
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer les dépendances frontend
+        working-directory: seedlab-front
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: seedlab-front
+        run: npm run build
+
+
+      - name: Configurer SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEBIAN_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEBIAN_HOST }}" >> ~/.ssh/known_hosts
+
+
+      - name: Déployer Frontend + Backend
+        run: |
+
+          echo "Déploiement du frontend..."
+
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            seedlab-front/dist/ \
+            "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}:/var/www/seedlab/"
+
+
+          echo "Déploiement du backend..."
+
+          ssh -i ~/.ssh/id_ed25519 \
+            "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}" << 'EOF'
+
+            cd /var/www/seedlab
+            git pull origin main
+            cd seedlab_backend
+            npm ci
+            pm2 restart seedlab-backend || \
+            pm2 start src/server.js --name seedlab-backend
+            pm2 save
+
+          EOF
+
+          echo "Déploiement terminé."
