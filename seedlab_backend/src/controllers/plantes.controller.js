@@ -14,7 +14,7 @@ const mapPlant = (plant) => ({
 export const listPlants = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT * FROM plants ORDER BY id DESC",
+      "SELECT * FROM plants WHERE nom <> 'plante test' ORDER BY id DESC",
     );
 
     return res.json({ plantes: rows.map(mapPlant) });
