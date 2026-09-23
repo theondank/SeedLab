@@ -79,13 +79,20 @@ jobs:
       - name: Configurer l'authentification SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEBIAN_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.DEBIAN_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.DEBIAN_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Se connecter au tailnet (Tailscale)
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
 
       - name: Mettre à jour le backend
         run: |
           ssh -i ~/.ssh/id_ed25519 \
+            -o StrictHostKeyChecking=accept-new \
             "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}" << 'EOF'
             cd /var/www/seedlab
             git pull origin main
@@ -102,7 +109,7 @@ jobs:
             --exclude '.git/' \
             --exclude 'seedlab_backend/' \
             --exclude 'seedlab-front/' \
-            -e "ssh -i ~/.ssh/id_ed25519" \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new" \
             dist/ \
             "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}:/var/www/seedlab/"
 
