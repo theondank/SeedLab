@@ -1,11 +1,11 @@
-import type { Sensor } from '../types/sensor'
+import type { CapteurStatus } from '../types/sensor'
 import { request } from './api-client'
 
-export function getSensors(): Promise<Sensor[]> {
-  return request<Sensor[]>('/api/sensors')
+export function getStatus(): Promise<CapteurStatus> {
+  return request<CapteurStatus>('/api/capteurs/status')
 }
 
 export async function getSensorStatus(): Promise<boolean> {
-  const sensors = await getSensors()
-  return sensors.length > 0 && sensors.every((s) => s.lastReading !== null && s.lastUpdate !== null)
+  const status = await getStatus()
+  return status.online
 }

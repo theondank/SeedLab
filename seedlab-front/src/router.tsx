@@ -33,13 +33,6 @@ export const routes: RouteObject[] = [
               return { Component: Plants }
             },
           },
-{
-            path: 'plantes',
-            lazy: async () => {
-              const { default: Plants } = await import('./Dashboard/plantes')
-              return { Component: Plants }
-            },
-          },
           {
             path: 'parametres',
             lazy: async () => {

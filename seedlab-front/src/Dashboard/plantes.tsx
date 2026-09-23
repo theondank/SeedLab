@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LuPlus, LuRefreshCw } from 'react-icons/lu'
-import type { Plant } from '../types/plant'
+import { LuRefreshCw } from 'react-icons/lu'
+import { mapEtatStatus, type Plant } from '../types/plant'
 import { plantService } from '../services'
 
 const statusMeta = {
@@ -10,7 +10,7 @@ const statusMeta = {
 } as const
 
 export default function Plants() {
-  const [plants, setPlants] = useState<Plant[]>([])
+  const [plant, setPlant] = useState<Plant | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,14 +19,14 @@ export default function Plants() {
 
     const load = async () => {
       try {
-        const data = await plantService.getPlants()
+        const data = await plantService.getPlant()
         if (!cancelled) {
-          setPlants(data)
+          setPlant(data)
           setError(null)
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Erreur de liaison avec les bacs.')
+          setError(err instanceof Error ? err.message : 'Erreur de liaison avec le bac.')
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -42,21 +42,15 @@ export default function Plants() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="titlebar text-xl font-bold uppercase tracking-wide text-ink">Plantes</h1>
-          <p className="tag mt-2 text-muted">Inventaire des bacs connectés</p>
-        </div>
-        <button type="button" className="btn-neon">
-          <LuPlus />
-          Ajouter un bac
-        </button>
+      <div className="mb-6">
+        <h1 className="titlebar text-xl font-bold uppercase tracking-wide text-ink">Plantes</h1>
+        <p className="tag mt-2 text-muted">État courant du bac connecté</p>
       </div>
 
       {loading && (
         <div className="card p-6 font-mono text-sm text-muted">
           <LuRefreshCw className="mr-2 inline animate-spin" />
-          Synchronisation des bacs…
+          Synchronisation du bac…
         </div>
       )}
 
@@ -66,41 +60,56 @@ export default function Plants() {
         </div>
       )}
 
-      {!loading && !error && plants.length === 0 && (
-        <div className="card p-6 font-mono text-sm text-muted">
-          Aucun bac détecté sur le réseau.
-        </div>
-      )}
-
-      {!loading && !error && plants.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {plants.map(({ id, name, variety, humidity, temperature, status }) => (
-            <article key={id} className="card p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-semibold text-ink">{name}</h2>
-                  <p className="mt-0.5 font-mono text-xs text-muted">{variety}</p>
-                </div>
-                <span
-                  className={`tag rounded-md border px-2.5 py-1 ${statusMeta[status].classes}`}
-                >
-                  {statusMeta[status].label}
+      {!loading && !error && plant && (
+        <article className="card max-w-xl p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`tag rounded-md border px-3 py-1.5 ${statusMeta[mapEtatStatus(plant.etat)].classes}`}
+              >
+                {statusMeta[mapEtatStatus(plant.etat)].label}
+              </span>
+              {plant.online ? (
+                <span className="tag inline-flex items-center gap-2 rounded-md border border-neon/40 bg-neon/10 px-3 py-1.5 text-neon">
+                  <span className="h-1.5 w-1.5 rounded-full bg-neon" />
+                  En ligne
                 </span>
-              </div>
+              ) : (
+                <span className="tag inline-flex items-center gap-2 rounded-md border border-warn/40 bg-warn/10 px-3 py-1.5 text-warn">
+                  <span className="h-1.5 w-1.5 rounded-full bg-warn" />
+                  Hors-ligne
+                </span>
+              )}
+            </div>
+          </div>
 
-              <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 font-mono text-sm">
-                <div>
-                  <dt className="tag text-muted">Humidité sol</dt>
-                  <dd className="cyber-copy mt-1 font-bold">{humidity} %</dd>
-                </div>
-                <div>
-                  <dt className="tag text-muted">Température</dt>
-                  <dd className="neon-copy mt-1 font-bold">{temperature} °C</dd>
-                </div>
-              </dl>
-            </article>
-          ))}
-        </div>
+          <p className="mt-4 font-mono text-xs uppercase tracking-widest text-muted">{plant.etat}</p>
+
+          <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 font-mono text-sm sm:grid-cols-4">
+            <div>
+              <dt className="tag text-muted">Humidité sol</dt>
+              <dd className="cyber-copy mt-1 font-bold">{plant.humidite} %</dd>
+            </div>
+            <div>
+              <dt className="tag text-muted">Température</dt>
+              <dd className="neon-copy mt-1 font-bold">{plant.temperature} °C</dd>
+            </div>
+            <div>
+              <dt className="tag text-muted">Luminosité</dt>
+              <dd className="cyber-copy mt-1 font-bold">{plant.luminosite} lux</dd>
+            </div>
+            <div>
+              <dt className="tag text-muted">Dernier arrosage</dt>
+              <dd className="neon-copy mt-1 font-bold">
+                {plant.dernier_arrosage > 0 ? `${plant.dernier_arrosage} s` : 'Jamais'}
+              </dd>
+            </div>
+          </dl>
+
+          <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
+            Dernière mise à jour : {new Date(plant.date_heure).toLocaleString('fr-FR')}
+          </p>
+        </article>
       )}
     </div>
   )

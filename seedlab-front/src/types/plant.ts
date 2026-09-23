@@ -1,10 +1,17 @@
 export type PlantStatus = 'ok' | 'warning' | 'alert'
 
 export type Plant = {
-  id: number
-  name: string
-  variety: string
-  humidity: number
+  online: boolean
   temperature: number
-  status: PlantStatus
+  humidite: number
+  luminosite: number
+  etat: string
+  dernier_arrosage: number
+  date_heure: string
+}
+
+export function mapEtatStatus(etat: string): PlantStatus {
+  if (etat.includes('arrosage')) return 'alert'
+  if (etat.includes('chaleur')) return 'warning'
+  return 'ok'
 }

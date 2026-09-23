@@ -18,14 +18,29 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v4
 
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       # FRONT
       - name: Installer les dépendances frontend
         working-directory: seedlab-front
         run: npm ci
 
+      - name: Lint frontend
+        working-directory: seedlab-front
+        run: npm run lint
+
       - name: Build frontend
         working-directory: seedlab-front
         run: npm run build
+
+      - name: Uploader l'artefact frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: seedlab-front-dist
+          path: seedlab-front/dist
 
       # BACK
       - name: Installer les dépendances backend
@@ -54,39 +69,24 @@ jobs:
         with:
           node-version: 22
 
-      - name: Installer les dépendances frontend
-        working-directory: seedlab-front
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: seedlab-front
-        run: npm run build
+      - name: Télécharger l'artefact frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: seedlab-front-dist
+          path: dist
 
 
-      - name: Configurer SSH
+      - name: Configurer l'authentification SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.DEBIAN_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.DEBIAN_HOST }}" >> ~/.ssh/known_hosts
 
-
-      - name: Déployer Frontend + Backend
+      - name: Mettre à jour le backend
         run: |
-
-          echo "Déploiement du frontend..."
-
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/id_ed25519" \
-            seedlab-front/dist/ \
-            "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}:/var/www/seedlab/"
-
-
-          echo "Déploiement du backend..."
-
           ssh -i ~/.ssh/id_ed25519 \
             "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}" << 'EOF'
-
             cd /var/www/seedlab
             git pull origin main
             cd seedlab_backend
@@ -94,7 +94,16 @@ jobs:
             pm2 restart seedlab-backend || \
             pm2 start src/server.js --name seedlab-backend
             pm2 save
-
           EOF
+
+      - name: Déployer le frontend
+        run: |
+          rsync -avz --delete \
+            --exclude '.git/' \
+            --exclude 'seedlab_backend/' \
+            --exclude 'seedlab-front/' \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            dist/ \
+            "${{ secrets.DEBIAN_USER }}@${{ secrets.DEBIAN_HOST }}:/var/www/seedlab/"
 
           echo "Déploiement terminé."
