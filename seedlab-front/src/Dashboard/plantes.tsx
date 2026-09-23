@@ -218,9 +218,6 @@ export default function Plants() {
                     {statusMeta[mapEtatStatus(p.etat)].label}
                   </span>
                 </div>
-                <p className="mt-3 border-t border-line pt-3 font-mono text-xs uppercase tracking-widest text-muted">
-                  Cliquer pour voir les données
-                </p>
               </button>
             </li>
           ))}
