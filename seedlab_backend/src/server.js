@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import pool from "./config/database.js";
 import authRoutes from "./routes/auth.routes.js";
 import capteurRoutes from "./routes/capteur.routes.js";
+import plantesRoutes from "./routes/plantes.routes.js";
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.get("/api/db-test", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/capteurs", capteurRoutes);
+app.use("/api/plantes", plantesRoutes);
 
 
 app.listen(PORT, () => {

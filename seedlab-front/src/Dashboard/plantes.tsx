@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LuRefreshCw } from 'react-icons/lu'
-import { mapEtatStatus, type Plant } from '../types/plant'
+import { LuPlus, LuRefreshCw, LuX } from 'react-icons/lu'
+import { mapEtatStatus, type Plant, type PlantRecord } from '../types/plant'
 import { plantService } from '../services'
 
 const statusMeta = {
@@ -11,17 +11,27 @@ const statusMeta = {
 
 export default function Plants() {
   const [plant, setPlant] = useState<Plant | null>(null)
+  const [plantes, setPlantes] = useState<PlantRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [nom, setNom] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
     const load = async () => {
       try {
-        const data = await plantService.getPlant()
+        const [status, { plantes }] = await Promise.all([
+          plantService.getPlant(),
+          plantService.getPlants(),
+        ])
         if (!cancelled) {
-          setPlant(data)
+          setPlant(status)
+          setPlantes(plantes)
           setError(null)
         }
       } catch (err) {
@@ -40,11 +50,44 @@ export default function Plants() {
     }
   }, [])
 
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!nom.trim() || adding) return
+
+    setAdding(true)
+    setAddError(null)
+    try {
+      const { plante } = await plantService.addPlant(nom.trim())
+      setPlantes((prev) => [plante, ...prev])
+      setModalOpen(false)
+      setNom('')
+    } catch (err) {
+      setAddError(err instanceof Error ? err.message : 'Impossible d’ajouter la plante.')
+    } finally {
+      setAdding(false)
+    }
+  }
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="titlebar text-xl font-bold uppercase tracking-wide text-ink">Plantes</h1>
-        <p className="tag mt-2 text-muted">État courant du bac connecté</p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="titlebar text-xl font-bold uppercase tracking-wide text-ink">Plantes</h1>
+          <p className="tag mt-2 text-muted">État courant du bac connecté</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAddError(null)
+            setNom('')
+            setModalOpen(true)
+          }}
+          className="inline-flex items-center gap-2 rounded-md border border-neon/50 bg-neon/10 px-4 py-2 font-mono text-sm font-bold uppercase tracking-widest text-neon transition hover:bg-neon/20"
+        >
+          <LuPlus className="text-lg" />
+          Ajouter une plante
+        </button>
       </div>
 
       {loading && (
@@ -110,6 +153,110 @@ export default function Plants() {
             Dernière mise à jour : {new Date(plant.date_heure).toLocaleString('fr-FR')}
           </p>
         </article>
+      )}
+
+      <section className="mt-8">
+        <h2 className="titlebar text-sm font-bold uppercase tracking-widest text-ink">
+          Plantes enregistrées
+        </h2>
+
+        {plantes.length === 0 && (
+          <p className="tag mt-4 text-muted">Aucune plante enregistrée pour le moment.</p>
+        )}
+
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {plantes.map((p) => (
+            <li key={p.id} className="card p-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-bold text-ink">{p.nom}</span>
+                <span
+                  className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(p.etat)].classes}`}
+                >
+                  {statusMeta[mapEtatStatus(p.etat)].label}
+                </span>
+              </div>
+              <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted">{p.etat}</p>
+              <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-xs">
+                <div>
+                  <dt className="text-muted">Humidité</dt>
+                  <dd className="cyber-copy mt-0.5 font-bold">{p.humidite} %</dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Temp.</dt>
+                  <dd className="neon-copy mt-0.5 font-bold">{p.temperature} °C</dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Lux</dt>
+                  <dd className="cyber-copy mt-0.5 font-bold">{p.luminosite}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => !adding && setModalOpen(false)}
+        >
+          <form
+            onSubmit={handleAdd}
+            onClick={(e) => e.stopPropagation()}
+            className="card w-full max-w-md p-6"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="titlebar text-sm font-bold uppercase tracking-widest text-ink">
+                Ajouter une plante
+              </h2>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                disabled={adding}
+                aria-label="Fermer"
+                className="rounded-md border border-line p-1.5 text-muted transition hover:border-alert/50 hover:text-alert disabled:opacity-40"
+              >
+                <LuX className="text-lg" />
+              </button>
+            </div>
+
+            <label className="mt-5 block text-sm text-ink">
+              Nom de la plante
+              <input
+                type="text"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                placeholder="ex : Basilic, Tomate…"
+                autoFocus
+                maxLength={50}
+                className="mt-2 w-full rounded-md border border-line bg-panel-2/60 px-3 py-2 font-mono text-sm text-ink placeholder:opacity-40 focus:border-neon/60 focus:outline-none focus:ring-2 focus:ring-neon/20"
+              />
+            </label>
+
+            {addError && (
+              <p className="mt-3 font-mono text-xs text-alert">{addError}</p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                disabled={adding}
+                className="rounded-md border border-line px-4 py-2 font-mono text-sm uppercase tracking-widest text-muted transition hover:border-cyber/50 hover:text-ink disabled:opacity-40"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={!nom.trim() || adding}
+                className="inline-flex items-center gap-2 rounded-md border border-neon/50 bg-neon/10 px-4 py-2 font-mono text-sm font-bold uppercase tracking-widest text-neon transition hover:bg-neon/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {adding && <LuRefreshCw className="animate-spin" />}
+                Ajouter
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   )
