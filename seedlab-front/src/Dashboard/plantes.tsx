@@ -20,6 +20,8 @@ export default function Plants() {
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
 
+  const [selected, setSelected] = useState<PlantRecord | null>(null)
+
   useEffect(() => {
     let cancelled = false
 
@@ -166,34 +168,93 @@ export default function Plants() {
 
         <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {plantes.map((p) => (
-            <li key={p.id} className="card p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-bold text-ink">{p.nom}</span>
-                <span
-                  className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(p.etat)].classes}`}
-                >
-                  {statusMeta[mapEtatStatus(p.etat)].label}
-                </span>
-              </div>
-              <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted">{p.etat}</p>
-              <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-xs">
-                <div>
-                  <dt className="text-muted">Humidité</dt>
-                  <dd className="cyber-copy mt-0.5 font-bold">{p.humidite} %</dd>
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => setSelected(p)}
+                className="card w-full p-4 text-left transition hover:border-neon/50 hover:shadow-[0_0_18px_rgba(0,255,163,0.08)]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bold text-ink">{p.nom}</span>
+                  <span
+                    className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(p.etat)].classes}`}
+                  >
+                    {statusMeta[mapEtatStatus(p.etat)].label}
+                  </span>
                 </div>
-                <div>
-                  <dt className="text-muted">Temp.</dt>
-                  <dd className="neon-copy mt-0.5 font-bold">{p.temperature} °C</dd>
-                </div>
-                <div>
-                  <dt className="text-muted">Lux</dt>
-                  <dd className="cyber-copy mt-0.5 font-bold">{p.luminosite}</dd>
-                </div>
-              </dl>
+                <p className="mt-3 border-t border-line pt-3 font-mono text-xs uppercase tracking-widest text-muted">
+                  Cliquer pour voir les données
+                </p>
+              </button>
             </li>
           ))}
         </ul>
       </section>
+
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="card w-full max-w-md p-6"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <h2 className="titlebar text-sm font-bold uppercase tracking-widest text-ink">
+                  {selected.nom}
+                </h2>
+                <span
+                  className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(selected.etat)].classes}`}
+                >
+                  {statusMeta[mapEtatStatus(selected.etat)].label}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                aria-label="Fermer"
+                className="rounded-md border border-line p-1.5 text-muted transition hover:border-alert/50 hover:text-alert"
+              >
+                <LuX className="text-lg" />
+              </button>
+            </div>
+
+            <p className="mt-3 font-mono text-xs uppercase tracking-widest text-muted">
+              {selected.etat}
+            </p>
+
+            <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 font-mono text-sm sm:grid-cols-4">
+              <div>
+                <dt className="tag text-muted">Humidité sol</dt>
+                <dd className="cyber-copy mt-1 font-bold">{selected.humidite} %</dd>
+              </div>
+              <div>
+                <dt className="tag text-muted">Température</dt>
+                <dd className="neon-copy mt-1 font-bold">{selected.temperature} °C</dd>
+              </div>
+              <div>
+                <dt className="tag text-muted">Luminosité</dt>
+                <dd className="cyber-copy mt-1 font-bold">{selected.luminosite} lux</dd>
+              </div>
+              <div>
+                <dt className="tag text-muted">Dernier arrosage</dt>
+                <dd className="neon-copy mt-1 font-bold">
+                  {selected.dernier_arrosage > 0 ? `${selected.dernier_arrosage} s` : 'Jamais'}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
+              Dernière mise à jour :{' '}
+              {selected.date_heure
+                ? new Date(selected.date_heure).toLocaleString('fr-FR')
+                : '—'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div
