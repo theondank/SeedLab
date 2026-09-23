@@ -1,4 +1,4 @@
-name: CI/CD SeedLab
+name: CI SeedLab
 
 on:
   push:
@@ -36,12 +36,6 @@ jobs:
         working-directory: seedlab-front
         run: npm run build
 
-      - name: Uploader l'artefact frontend
-        uses: actions/upload-artifact@v4
-        with:
-          name: seedlab-front-dist
-          path: seedlab-front/dist
-
       # BACK
       - name: Installer les dépendances backend
         working-directory: seedlab_backend
@@ -50,44 +44,3 @@ jobs:
       - name: Vérifier le backend
         working-directory: seedlab_backend
         run: node --check src/server.js
-
-
-  deploy:
-    runs-on: self-hosted
-
-    needs: ci
-
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-
-      - name: Récupérer le code
-        uses: actions/checkout@v4
-
-      - name: Télécharger l'artefact frontend
-        uses: actions/download-artifact@v4
-        with:
-          name: seedlab-front-dist
-          path: dist
-
-      - name: Déployer le backend
-        run: |
-          rsync -av --delete --exclude 'node_modules/' \
-            "$GITHUB_WORKSPACE/seedlab_backend/" \
-            /var/www/seedlab/seedlab_backend/
-          cd /var/www/seedlab/seedlab_backend
-          npm ci
-          pm2 restart seedlab-backend || \
-          pm2 start src/server.js --name seedlab-backend
-          pm2 save
-
-      - name: Déployer le frontend
-        run: |
-          rsync -av --delete \
-            --exclude '.git/' \
-            --exclude 'seedlab_backend/' \
-            --exclude 'seedlab-front/' \
-            "$GITHUB_WORKSPACE/dist/" \
-            /var/www/seedlab/
-
-          echo "Déploiement terminé."
