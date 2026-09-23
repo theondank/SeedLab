@@ -197,7 +197,7 @@ export default function Plants() {
         </ul>
       </section>
 
-      {selected && (
+      {selected && plant && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={() => setSelected(null)}
@@ -212,9 +212,9 @@ export default function Plants() {
                   {selected.nom}
                 </h2>
                 <span
-                  className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(selected.etat)].classes}`}
+                  className={`tag rounded-md border px-2 py-1 font-mono text-xs uppercase ${statusMeta[mapEtatStatus(plant.etat)].classes}`}
                 >
-                  {statusMeta[mapEtatStatus(selected.etat)].label}
+                  {statusMeta[mapEtatStatus(plant.etat)].label}
                 </span>
               </div>
               <button
@@ -227,36 +227,32 @@ export default function Plants() {
               </button>
             </div>
 
-            <p className="mt-3 font-mono text-xs uppercase tracking-widest text-muted">
-              {selected.etat}
-            </p>
+            <p className="mt-3 font-mono text-xs uppercase tracking-widest text-muted">{plant.etat}</p>
 
             <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 font-mono text-sm sm:grid-cols-4">
               <div>
                 <dt className="tag text-muted">Humidité sol</dt>
-                <dd className="cyber-copy mt-1 font-bold">{selected.humidite} %</dd>
+                <dd className="cyber-copy mt-1 font-bold">{plant.humidite} %</dd>
               </div>
               <div>
                 <dt className="tag text-muted">Température</dt>
-                <dd className="neon-copy mt-1 font-bold">{selected.temperature} °C</dd>
+                <dd className="neon-copy mt-1 font-bold">{plant.temperature} °C</dd>
               </div>
               <div>
                 <dt className="tag text-muted">Luminosité</dt>
-                <dd className="cyber-copy mt-1 font-bold">{selected.luminosite} lux</dd>
+                <dd className="cyber-copy mt-1 font-bold">{plant.luminosite} lux</dd>
               </div>
               <div>
                 <dt className="tag text-muted">Dernier arrosage</dt>
                 <dd className="neon-copy mt-1 font-bold">
-                  {selected.dernier_arrosage > 0 ? `${selected.dernier_arrosage} s` : 'Jamais'}
+                  {plant.dernier_arrosage > 0 ? `${plant.dernier_arrosage} s` : 'Jamais'}
                 </dd>
               </div>
             </dl>
 
             <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
               Dernière mise à jour :{' '}
-              {selected.date_heure
-                ? new Date(selected.date_heure).toLocaleString('fr-FR')
-                : '—'}
+              {new Date(plant.date_heure).toLocaleString('fr-FR')}
             </p>
           </div>
         </div>
