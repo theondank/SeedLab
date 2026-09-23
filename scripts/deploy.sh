@@ -30,17 +30,21 @@ git fetch origin "$BRANCH"
 LOCAL=$(git rev-parse HEAD)
 REMOTE=$(git rev-parse "origin/$BRANCH")
 
-if [ "$LOCAL" = "$REMOTE" ] && [ "${FORCE:-0}" != "1" ]; then
+RESUMED="${RESUMED:-0}"
+if [ "$LOCAL" = "$REMOTE" ] && [ "$RESUMED" != "1" ]; then
   log "Aucun changement sur $BRANCH, rien à faire."
   exit 0
 fi
 
 log "Nouvelle version détectée ($LOCAL -> $REMOTE), déploiement..."
 
-# Mettre le working tree à l'état exact de origin/main, puis se relancer
+# Mettre le working tree à l'état exact de origin/main, puis se relancer UNE fois
 # (le fichier lui-même vient d'être remplacé : on repart avec la nouvelle config)
 git reset --hard "origin/$BRANCH"
-exec env FORCE=1 bash "$0"
+if [ "$RESUMED" != "1" ]; then
+  log "Restart du script avec la configuration mise à jour..."
+  exec env RESUMED=1 bash "$0"
+fi
 
 # BACK : dépendances + redémarrage
 log "Installation des dépendances backend..."
