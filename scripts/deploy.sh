@@ -30,21 +30,23 @@ git fetch origin "$BRANCH"
 LOCAL=$(git rev-parse HEAD)
 REMOTE=$(git rev-parse "origin/$BRANCH")
 
-if [ "$LOCAL" = "$REMOTE" ]; then
+if [ "$LOCAL" = "$REMOTE" ] && [ "${FORCE:-0}" != "1" ]; then
   log "Aucun changement sur $BRANCH, rien à faire."
   exit 0
 fi
 
 log "Nouvelle version détectée ($LOCAL -> $REMOTE), déploiement..."
 
-# Mettre le working tree à l'état exact de origin/main
+# Mettre le working tree à l'état exact de origin/main, puis se relancer
+# (le fichier lui-même vient d'être remplacé : on repart avec la nouvelle config)
 git reset --hard "origin/$BRANCH"
+exec env FORCE=1 bash "$0"
 
 # BACK : dépendances + redémarrage
 log "Installation des dépendances backend..."
 ( cd "$REPO_DIR/seedlab_backend" && npm ci )
 log "Redémarrage du backend..."
-( cd "$REPO_DIR/seedlab_backend" && pm2 restart seedlab-backend 2>/dev/null ) \
+( cd "$REPO_DIR/seedlab_backend" && pm2 restart seedlab-backend --update-env 2>/dev/null ) \
   || ( cd "$REPO_DIR/seedlab_backend" && pm2 start src/server.js --name seedlab-backend )
 pm2 save > /dev/null 2>&1 || true
 
