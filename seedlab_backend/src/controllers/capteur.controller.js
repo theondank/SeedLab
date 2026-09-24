@@ -1,20 +1,18 @@
+import fs from "fs/promises";
+import path from "path";
 import pool from "../config/database.js";
 
-/**
- * 1. LECTURE (Front-end) : GET /api/capteurs/status
- */
 export const getStatusSensors = async (req, res) => {
   try {
     const [[plant]] = await pool.query(
-      "SELECT * FROM plants ORDER BY id DESC LIMIT 1",
+      "SELECT * FROM plants ORDER BY id_plants DESC LIMIT 1"
     );
 
     if (!plant) {
       return res.status(404).json({ message: "Aucune donnée disponible" });
     }
 
-    const isOnline =
-      Date.now() - new Date(plant.date_heure).getTime() < 5 * 60 * 1000;
+    const isOnline = Date.now() - new Date(plant.date_heure).getTime() < 5 * 60 * 1000;
 
     return res.json({
       online: isOnline,
@@ -48,32 +46,19 @@ export const updateSensorData = async (req, res) => {
     const temp = Number(temperature);
     const hum = Number(humidite);
 
-    if (
-      isNaN(temp) ||
-      isNaN(hum) ||
-      temp < -20 ||
-      temp > 70 ||
-      hum < 0 ||
-      hum > 100
-    ) {
+    if (isNaN(temp) || isNaN(hum) || temp < -20 || temp > 70 || hum < 0 || hum > 100) {
       return res.status(400).json({ message: "Données de capteurs invalides veuillez controller vos capteurs" });
     }
 
     const needsWater = hum < 35;
-    const etat = needsWater
-      ? "arrosage requis"
-      : temp > 32
-        ? "chaleur excessive"
-        : "etat ok";
+    const etat = needsWater ? "arrosage requis" : temp > 32 ? "chaleur excessive" : "etat ok";
 
     await pool.query(
       `UPDATE plants 
        SET temperature = ?, humidite = ?, debit_eau = ?, luminosite = ?, etat_plants = ?, date_heure = ?
-       ORDER BY id DESC LIMIT 1`,
-      [temp, hum, debit_eau, luminosite, etat, new Date()],
+       ORDER BY id_plants DESC LIMIT 1`,
+      [temp, hum, debit_eau, luminosite, etat, new Date()]
     );
-
-
 
     return res.json({
       success: true,
@@ -82,9 +67,74 @@ export const updateSensorData = async (req, res) => {
         duree_secondes: needsWater ? 4 : 0,
       },
     });
-
   } catch (error) {
     console.error("Erreur mise à jour capteurs :", error);
     return res.status(500).json({ message: "Erreur serveur" });
   }
 };
+
+export const getPlantPhoto = async (req, res) => {
+  try {
+    let photosDir = process.env.PHOTOS_DIR || "/home/admin/photos";
+
+    try {
+      await fs.access(photosDir);
+    } catch {
+      const localFallback = path.resolve(process.cwd(), "photos");
+      try {
+        await fs.access(localFallback);
+        photosDir = localFallback;
+      } catch {
+        return res.status(404).json({
+          success: false,
+          message: `Dossier de photos introuvable : ${photosDir}`,
+        });
+      }
+    }
+
+    const entries = await fs.readdir(photosDir, { withFileTypes: true });
+    const imageFiles = entries.filter((entry) => entry.isFile() && /\.(jpe?g)$/i.test(entry.name));
+
+    if (imageFiles.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Aucune photo disponible dans le dossier",
+      });
+    }
+
+    const filesWithStats = await Promise.all(
+      imageFiles.map(async (file) => {
+        const fullPath = path.join(photosDir, file.name);
+        const stats = await fs.stat(fullPath);
+        return {
+          name: file.name,
+          fullPath,
+          mtime: stats.mtime,
+          size: stats.size,
+        };
+      })
+    );
+
+    filesWithStats.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+    const latestPhoto = filesWithStats[0];
+
+    const imageBuffer = await fs.readFile(latestPhoto.fullPath);
+    const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+
+    return res.json({
+      success: true,
+      filename: latestPhoto.name,
+      date: latestPhoto.mtime,
+      size: latestPhoto.size,
+      mimeType: "image/jpeg",
+      image: base64Image,
+    });
+  } catch (error) {
+    console.error("Erreur récupération photo plante :", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération de la photo",
+    });
+  }
+};
+
