@@ -45,12 +45,12 @@ RELAY_PIN = 26       # BCM 26 (Broche physique 37) - Relais pompe
 SONDE_PIN = 17       # BCM 17 (Broche physique 11) - Sonde niveau d'eau
 
 # Relais : True si Active LOW (0V = allumé, 3.3V = éteint), False sinon
-RELAY_ACTIVE_LOW = True
+RELAY_ACTIVE_LOW = False
 
 # Sonde : Niveau logique quand l'eau est DÉTECTÉE
 # - Sur la plupart des sondes à comparateur LM393 : sortie LOW (0) quand immergée
 # - Si votre sonde renvoie 1 (HIGH) quand il y a de l'eau, passez cette valeur à GPIO.HIGH
-WATER_DETECTED_LEVEL = GPIO.LOW
+WATER_DETECTED_LEVEL = GPIO.HIGH
 
 # Temps d'arrosage pour le test (en secondes)
 DUREE_POMPAGE = 4
