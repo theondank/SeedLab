@@ -58,11 +58,7 @@ export const updateSensorData = async (req, res) => {
       `UPDATE plants 
        SET temperature = ?, humidite = ?, debit_eau = ?, luminosite = ?, etat_plants = ?, date_heure = ?
        ORDER BY id_plants DESC LIMIT 1`,
-<<<<<<< HEAD
-      [temp, hum, debit_eau, luminosite, etat, new Date()]
-=======
-      [temp, hum, debit_eau, luminosite, etat, new Date()],
->>>>>>> origin/main
+[temp, hum, debit_eau, luminosite, etat, new Date()],
     );
 
     void broadcastCapteur();
