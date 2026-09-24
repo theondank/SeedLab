@@ -69,7 +69,7 @@ PIN_RELAIS_POMPE = 26
 
 # Paramètres matériels validés lors des tests
 RELAY_ACTIVE_LOW = False          # False = HIGH allume le relais, LOW l'éteint
-WATER_DETECTED_LEVEL = 1          # 1 (HIGH) = eau présente, 0 (LOW) = réservoir vide
+WATER_DETECTED_LEVEL = 0          # 0 (LOW) = eau présente, 1 (HIGH) = réservoir vide
 
 # Paramètres agronomiques
 SEUIL_HUMIDITE_SOL = 35.0         # Humidité minimale requise (%)
@@ -91,8 +91,8 @@ def init_gpio():
     GPIO.setup(PIN_RELAIS_POMPE, GPIO.OUT)
     eteindre_pompe()
 
-    # Sonde de niveau d'eau (Entrée avec résistance de tirage)
-    GPIO.setup(PIN_SONDE_EAU, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    # Sonde de niveau d'eau (Entrée avec résistance de tirage vers 3.3V)
+    GPIO.setup(PIN_SONDE_EAU, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     print("🔌 Matériel GPIO initialisé avec succès.")
 
 

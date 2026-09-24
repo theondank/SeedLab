@@ -33,23 +33,23 @@ except (ImportError, RuntimeError):
 # =============================================================================
 SONDE_PIN = 17       # Broche BCM 17 (Broche physique 11)
 
-# Définition de l'état logique :
-# - Si la valeur passe à 1 (HIGH) quand la sonde touche l'eau -> WATER_LEVEL = 1
-# - Si la valeur passe à 0 (LOW) quand la sonde touche l'eau -> WATER_LEVEL = 0
-# (Ce script affiche les deux pour que vous puissiez vérifier instantanément)
-WATER_LEVEL = 1
+# Logique du comparateur LM393 :
+# - Sortie 1 (HIGH) quand le capteur est SEC (dans l'air)
+# - Sortie 0 (LOW) quand le capteur est DANS L'EAU (conducteur)
+WATER_LEVEL = 0      # 0 = Eau détectée, 1 = Sec
 # =============================================================================
 
 def main():
     print("\n" + "=" * 60)
-    print("💧 TEST EN DIRECT DU CAPTEUR D'EAU 💧")
+    print("💧 TEST EN DIRECT DU CAPTEUR D'EAU (CALIBRATION LM393) 💧")
     print(f"Broche surveillée : GPIO {SONDE_PIN} (Broche physique 11)")
+    print(f"Logique configurée : {WATER_LEVEL} = EAU DÉTECTÉE | {1 - WATER_LEVEL} = SEC")
     print("Appuyez sur Ctrl+C pour quitter.")
     print("=" * 60)
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
-    GPIO.setup(SONDE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(SONDE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     dernier_etat = None
 
@@ -63,14 +63,14 @@ def main():
             # Détection d'un changement d'état
             if valeur != dernier_etat:
                 if est_immergee:
-                    print(f"💧 [CHANGEMENT] -> EAU DÉTECTÉE !   (Signal brut GPIO = {valeur})")
+                    print(f"💧 [DÉTECTION] -> EAU PRÉSENTE DANS LE BAC ! (GPIO {SONDE_PIN} = {valeur})")
                 else:
-                    print(f"🚫 [CHANGEMENT] -> PAS D'EAU (SEC) ! (Signal brut GPIO = {valeur})")
+                    print(f"🚫 [DÉTECTION] -> RÉSERVOIR SEC / PAS D'EAU ! (GPIO {SONDE_PIN} = {valeur})")
                 dernier_etat = valeur
 
             # Affichage dynamique sur la même ligne
             icone = "💧 [EAU PRÉSENTE]" if est_immergee else "🚫 [PAS D'EAU]   "
-            sys.stdout.write(f"\rLecture en cours : {icone} | Valeur brute GPIO={valeur} ")
+            sys.stdout.write(f"\rÉtat : {icone} | Signal brut GPIO {SONDE_PIN} = {valeur} (1=Sec, 0=Eau) ")
             sys.stdout.flush()
 
             time.sleep(0.3)
