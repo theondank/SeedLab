@@ -144,73 +144,71 @@ export default function Plants() {
       )}
 
       {!loading && !error && plant && (
-        <article className="card max-w-3xl p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={`tag rounded-md border px-3 py-1.5 ${statusMeta[mapEtatStatus(plant.etat)].classes}`}
-              >
-                {statusMeta[mapEtatStatus(plant.etat)].label}
-              </span>
-              {plant.online ? (
-                <span className="tag inline-flex items-center gap-2 rounded-md border border-neon/40 bg-neon/10 px-3 py-1.5 text-neon">
-                  <span className="h-1.5 w-1.5 rounded-full bg-neon" />
-                  En ligne
+        <div className="grid gap-5 lg:grid-cols-[1fr_auto]">
+          <article className="card p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span
+                  className={`tag rounded-md border px-3 py-1.5 ${statusMeta[mapEtatStatus(plant.etat)].classes}`}
+                >
+                  {statusMeta[mapEtatStatus(plant.etat)].label}
                 </span>
-              ) : (
-                <span className="tag inline-flex items-center gap-2 rounded-md border border-warn/40 bg-warn/10 px-3 py-1.5 text-warn">
-                  <span className="h-1.5 w-1.5 rounded-full bg-warn" />
-                  Hors-ligne
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-5 border-t border-line pt-4 lg:grid-cols-[1fr_auto]">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-widest text-muted">{plant.etat}</p>
-
-              <dl className="mt-4 grid grid-cols-2 gap-3 font-mono text-sm sm:grid-cols-4">
-                <div>
-                  <dt className="tag text-muted">Humidité sol</dt>
-                  <dd className="cyber-copy mt-1 font-bold">{plant.humidite} %</dd>
-                </div>
-                <div>
-                  <dt className="tag text-muted">Température</dt>
-                  <dd className="neon-copy mt-1 font-bold">{plant.temperature} °C</dd>
-                </div>
-                <div>
-                  <dt className="tag text-muted">Luminosité</dt>
-                  <dd className="cyber-copy mt-1 font-bold">{plant.luminosite} lux</dd>
-                </div>
-                <div>
-                  <dt className="tag text-muted">Dernier arrosage</dt>
-                  <dd className="neon-copy mt-1 font-bold">
-                    {plant.dernier_arrosage > 0 ? `${plant.dernier_arrosage} s` : 'Jamais'}
-                  </dd>
-                </div>
-              </dl>
-
-              <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
-                Dernière mise à jour : {new Date(plant.date_heure).toLocaleString('fr-FR')}
-              </p>
-            </div>
-
-            <div className="lg:w-72">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="tag inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-ink">
-                  <LuVideo className="text-cyber" />
-                  Flux caméra
-                </h3>
+                {plant.online ? (
+                  <span className="tag inline-flex items-center gap-2 rounded-md border border-neon/40 bg-neon/10 px-3 py-1.5 text-neon">
+                    <span className="h-1.5 w-1.5 rounded-full bg-neon" />
+                    En ligne
+                  </span>
+                ) : (
+                  <span className="tag inline-flex items-center gap-2 rounded-md border border-warn/40 bg-warn/10 px-3 py-1.5 text-warn">
+                    <span className="h-1.5 w-1.5 rounded-full bg-warn" />
+                    Hors-ligne
+                  </span>
+                )}
               </div>
-              <img
-                src={CAMERA_STREAM_URL}
-                alt="Flux vidéo de la caméra du bac"
-                className="mt-3 w-full rounded-md border border-line object-cover"
-              />
             </div>
-          </div>
-        </article>
+
+            <p className="mt-4 font-mono text-xs uppercase tracking-widest text-muted">{plant.etat}</p>
+
+            <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 font-mono text-sm sm:grid-cols-4">
+              <div>
+                <dt className="tag text-muted">Humidité sol</dt>
+                <dd className="cyber-copy mt-1 font-bold">{plant.humidite} %</dd>
+              </div>
+              <div>
+                <dt className="tag text-muted">Température</dt>
+                <dd className="neon-copy mt-1 font-bold">{plant.temperature} °C</dd>
+              </div>
+              <div>
+                <dt className="tag text-muted">Luminosité</dt>
+                <dd className="cyber-copy mt-1 font-bold">{plant.luminosite} lux</dd>
+              </div>
+              <div>
+                <dt className="tag text-muted">Dernier arrosage</dt>
+                <dd className="neon-copy mt-1 font-bold">
+                  {plant.dernier_arrosage > 0 ? `${plant.dernier_arrosage} s` : 'Jamais'}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
+              Dernière mise à jour : {new Date(plant.date_heure).toLocaleString('fr-FR')}
+            </p>
+          </article>
+
+          <article className="card w-full p-6 lg:w-96">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="tag inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-ink">
+                <LuVideo className="text-cyber" />
+                Flux caméra
+              </h3>
+            </div>
+            <img
+              src={CAMERA_STREAM_URL}
+              alt="Flux vidéo de la caméra du bac"
+              className="mt-4 w-full rounded-md border border-line bg-panel-2/60 object-cover"
+            />
+          </article>
+        </div>
       )}
 
       <section className="mt-8">
