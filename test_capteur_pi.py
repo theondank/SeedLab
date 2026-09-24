@@ -50,7 +50,7 @@ except (ImportError, RuntimeError):
 # CONFIGURATION
 # =============================================================================
 # ⚠️ Remplacez 'localhost' par l'IP de votre PC (ex: '192.168.1.50') si exécuté depuis la Pi
-BACKEND_HOST = "localhost"
+BACKEND_HOST = "10.0.3.206"
 BACKEND_PORT = 5000
 BASE_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 
@@ -58,8 +58,8 @@ BASE_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 API_KEY = "seedlab_rpi_cle_secrete_2026"
 
 # Configuration matérielle du relais (Raspberry Pi)
-RELAY_PIN = 17      # Broche BCM 17
-ACTIVE_LOW = True   # Niveau LOW pour fermer le relais
+RELAY_PIN = 26      # Broche BCM 26 (Broche physique 37)
+ACTIVE_LOW = False  # Niveau HIGH pour fermer le relais (pompe ON)
 
 
 # =============================================================================
@@ -210,6 +210,37 @@ def test_4_envoi_telemetrie_critique():
         return False
 
 
+def test_5_authentification_empreinte(fingerprint_id=1):
+    print("\n" + "=" * 60)
+    print(f"TEST 5 : Authentification par empreinte digitale (ID: {fingerprint_id})")
+    print("=" * 60)
+    url = f"{BASE_URL}/api/auth/fingerprint"
+    payload = {
+        "api_key": API_KEY,
+        "fingerprint_id": fingerprint_id
+    }
+    print(f"-> Envoi POST vers {url} avec payload :\n{json.dumps(payload, indent=4)}")
+    try:
+        resp = requests.post(url, json=payload, timeout=3)
+        print(f"   Status Code : {resp.status_code}")
+        data = resp.json()
+        print(f"   Réponse serveur :\n{json.dumps(data, indent=4, ensure_ascii=False)}")
+
+        if resp.status_code == 200 and data.get("success"):
+            user = data.get("user", {})
+            print(f"✅ TEST 5 RÉUSSI : Utilisateur authentifié -> {user.get('name')} ({user.get('email')})")
+            return True
+        elif resp.status_code == 401:
+            print("ℹ️ TEST 5 : Capteur ou empreinte rejetée (401). Vérifiez la clé API ou l'association en BDD.")
+            return False
+        else:
+            print(f"❌ TEST 5 : Réponse inattendue ({resp.status_code}) - {data.get('message')}")
+            return False
+    except Exception as e:
+        print(f"❌ TEST 5 ÉCHOUÉ : Erreur ({e})")
+        return False
+
+
 def main():
     print("\n🌱 SEEDLAB - SUITE DE TESTS COMPLÈTE PI <-> BACKEND 🌱")
     print(f"Serveur cible : {BASE_URL}")
@@ -232,7 +263,10 @@ def main():
         # Étape 4 : Télémétrie sol sec + test pompe
         test_4_envoi_telemetrie_critique()
 
-        # Étape 5 : Vérification de l'état final enregistré en BDD
+        # Étape 5 : Test authentification par empreinte digitale
+        test_5_authentification_empreinte(fingerprint_id=1)
+
+        # Étape 6 : Vérification de l'état final enregistré en BDD
         print("\n" + "=" * 60)
         print("VÉRIFICATION FINALE DE L'ÉTAT CONSTANT MIS À JOUR")
         print("=" * 60)
