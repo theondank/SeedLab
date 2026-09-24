@@ -9,15 +9,15 @@ DUREE_TEST = 3       # Durée en secondes
 
 # La plupart des modules relais sont "Active LOW" (0V = allumé, 3.3V = éteint).
 # Si votre relais fonctionne à l'envers, passez cette valeur à False.
-ACTIVE_LOW = True
+ACTIVE_LOW = False
 # =============================================================================
 
 def allumer_pompe():
-    GPIO.output(RELAY_PIN, GPIO.LOW if ACTIVE_LOW else GPIO.HIGH)
+    GPIO.output(RELAY_PIN, GPIO.HIGH if ACTIVE_LOW else GPIO.HIGH)
     print("🟢 POMPE ACTIVÉE (Relais fermé)")
 
 def eteindre_pompe():
-    GPIO.output(RELAY_PIN, GPIO.HIGH if ACTIVE_LOW else GPIO.LOW)
+    GPIO.output(RELAY_PIN, GPIO.LOW if ACTIVE_LOW else GPIO.LOW)
     print("🔴 POMPE COUPÉE (Relais ouvert)")
 
 try:
