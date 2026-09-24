@@ -22,7 +22,10 @@ type LoginFormValues = {
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [bioStatus, setBioStatus] = useState<'idle' | 'scanning' | 'success' | 'failed'>('idle')
+  const [bioMessage, setBioMessage] = useState('')
   const navigate = useNavigate()
+
   const {
     register,
     handleSubmit,
@@ -44,6 +47,41 @@ export default function LoginPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     }
+  }
+
+  const startBiometricLogin = async () => {
+    try {
+      setBioStatus('scanning')
+      setBioMessage('Posez votre doigt sur le capteur de la serre...')
+      setError(null)
+
+      const start = await authService.startFingerprint()
+      if (!start.success) throw new Error(start.message)
+
+      const timer = setInterval(async () => {
+        const res = await authService.getFingerprintStatus().catch(() => null)
+        if (res?.status === 'success') {
+          clearInterval(timer)
+          setBioStatus('success')
+          setBioMessage(`Authentifié avec succès ! Bienvenue ${res.user?.name || ''}`)
+          if (res.token) localStorage.setItem('token', res.token)
+          setTimeout(() => navigate('/dashboard'), 1000)
+        } else if (res?.status === 'failed') {
+          clearInterval(timer)
+          setBioStatus('failed')
+          setBioMessage(res.message || 'Échec de la lecture biométrique')
+        }
+      }, 1000)
+    } catch (err) {
+      setBioStatus('failed')
+      setBioMessage(err instanceof Error ? err.message : 'Erreur de communication')
+    }
+  }
+
+  const cancelBiometricLogin = async () => {
+    await authService.cancelFingerprint().catch(() => {})
+    setBioStatus('idle')
+    setBioMessage('')
   }
 
   return (
@@ -153,10 +191,49 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-line" />
           </div>
 
-          <button type="button" className="btn-ghost w-full">
-            <LuFingerprint className="text-lg text-cyber" />
-            Empreinte biométrique
-          </button>
+          {bioStatus === 'idle' ? (
+            <button
+              type="button"
+              onClick={startBiometricLogin}
+              className="btn-ghost w-full"
+            >
+              <LuFingerprint className="text-lg text-cyber" />
+              Empreinte biométrique
+            </button>
+          ) : (
+            <div className={`rounded-xl border p-4 text-center backdrop-blur-md ${
+              bioStatus === 'failed'
+                ? 'border-alert/50 bg-alert/15 text-alert'
+                : bioStatus === 'success'
+                ? 'border-neon/50 bg-neon/15 text-neon'
+                : 'border-neon/40 bg-abyss/80 text-ink'
+            }`}>
+              {bioStatus === 'scanning' && (
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-neon/30 bg-neon/10 text-neon animate-pulse">
+                  <LuFingerprint className="text-2xl animate-bounce" />
+                </div>
+              )}
+              <p className="font-mono text-xs">{bioMessage}</p>
+              {bioStatus === 'scanning' && (
+                <button
+                  type="button"
+                  onClick={cancelBiometricLogin}
+                  className="mt-2 font-mono text-xs text-alert hover:underline"
+                >
+                  Annuler
+                </button>
+              )}
+              {bioStatus === 'failed' && (
+                <button
+                  type="button"
+                  onClick={startBiometricLogin}
+                  className="btn-neon mt-2 px-3 py-1 text-xs"
+                >
+                  Réessayer
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <p className="mt-10 text-center font-mono text-xs text-muted/60">

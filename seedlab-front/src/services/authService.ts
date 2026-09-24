@@ -21,3 +21,22 @@ export function logout(): Promise<{ success: boolean }> {
     method: 'POST',
   })
 }
+
+export function startFingerprint(): Promise<{ success: boolean; message: string }> {
+  return request('/api/auth/fingerprint/start', { method: 'POST' })
+}
+
+export function getFingerprintStatus(): Promise<{
+  active: boolean
+  status: 'idle' | 'waiting' | 'success' | 'failed'
+  scan_required: boolean
+  user: Session['user'] | null
+  token: string | null
+  message: string | null
+}> {
+  return request('/api/auth/fingerprint/status')
+}
+
+export function cancelFingerprint(): Promise<{ success: boolean }> {
+  return request('/api/auth/fingerprint/cancel', { method: 'POST' })
+}
