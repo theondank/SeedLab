@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { LuImageOff, LuPlus, LuRefreshCw, LuSprout, LuX, LuWand } from 'react-icons/lu'
+import { LuImageOff, LuPlus, LuRefreshCw, LuSprout, LuVideo, LuX, LuWand } from 'react-icons/lu'
 import { mapEtatStatus, type Plant, type PlantRecord } from '../types/plant'
 import type { Diagnostic } from '../types/diagnostic'
 import { iaService, plantService } from '../services'
 import { subscribeWs } from '../services/wsClient'
+
+const CAMERA_STREAM_URL = 'http://10.0.3.94:81/stream'
 
 const statusMeta = {
   ok: { label: 'Stable', classes: 'border-neon/40 bg-neon/10 text-neon' },
@@ -142,7 +144,7 @@ export default function Plants() {
       )}
 
       {!loading && !error && plant && (
-        <article className="card max-w-xl p-6">
+        <article className="card max-w-3xl p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <span
@@ -164,32 +166,50 @@ export default function Plants() {
             </div>
           </div>
 
-          <p className="mt-4 font-mono text-xs uppercase tracking-widest text-muted">{plant.etat}</p>
+          <div className="mt-5 grid gap-5 border-t border-line pt-4 lg:grid-cols-[1fr_auto]">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-widest text-muted">{plant.etat}</p>
 
-          <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 font-mono text-sm sm:grid-cols-4">
-            <div>
-              <dt className="tag text-muted">Humidité sol</dt>
-              <dd className="cyber-copy mt-1 font-bold">{plant.humidite} %</dd>
-            </div>
-            <div>
-              <dt className="tag text-muted">Température</dt>
-              <dd className="neon-copy mt-1 font-bold">{plant.temperature} °C</dd>
-            </div>
-            <div>
-              <dt className="tag text-muted">Luminosité</dt>
-              <dd className="cyber-copy mt-1 font-bold">{plant.luminosite} lux</dd>
-            </div>
-            <div>
-              <dt className="tag text-muted">Dernier arrosage</dt>
-              <dd className="neon-copy mt-1 font-bold">
-                {plant.dernier_arrosage > 0 ? `${plant.dernier_arrosage} s` : 'Jamais'}
-              </dd>
-            </div>
-          </dl>
+              <dl className="mt-4 grid grid-cols-2 gap-3 font-mono text-sm sm:grid-cols-4">
+                <div>
+                  <dt className="tag text-muted">Humidité sol</dt>
+                  <dd className="cyber-copy mt-1 font-bold">{plant.humidite} %</dd>
+                </div>
+                <div>
+                  <dt className="tag text-muted">Température</dt>
+                  <dd className="neon-copy mt-1 font-bold">{plant.temperature} °C</dd>
+                </div>
+                <div>
+                  <dt className="tag text-muted">Luminosité</dt>
+                  <dd className="cyber-copy mt-1 font-bold">{plant.luminosite} lux</dd>
+                </div>
+                <div>
+                  <dt className="tag text-muted">Dernier arrosage</dt>
+                  <dd className="neon-copy mt-1 font-bold">
+                    {plant.dernier_arrosage > 0 ? `${plant.dernier_arrosage} s` : 'Jamais'}
+                  </dd>
+                </div>
+              </dl>
 
-          <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
-            Dernière mise à jour : {new Date(plant.date_heure).toLocaleString('fr-FR')}
-          </p>
+              <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted">
+                Dernière mise à jour : {new Date(plant.date_heure).toLocaleString('fr-FR')}
+              </p>
+            </div>
+
+            <div className="lg:w-72">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="tag inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-ink">
+                  <LuVideo className="text-cyber" />
+                  Flux caméra
+                </h3>
+              </div>
+              <img
+                src={CAMERA_STREAM_URL}
+                alt="Flux vidéo de la caméra du bac"
+                className="mt-3 w-full rounded-md border border-line object-cover"
+              />
+            </div>
+          </div>
         </article>
       )}
 
