@@ -83,24 +83,54 @@ const lireDerniereTelemetrie = async () => {
 };
 
 const appelerOllama = async (prompt, base64Image) => {
-  const response = await fetch(`${OLLAMA_URL}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(10 * 60 * 1000),
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      prompt,
-      images: [base64Image],
-      stream: false,
-      format: "json",
-    }),
+  const body = JSON.stringify({
+    model: OLLAMA_MODEL,
+    prompt,
+    images: [base64Image],
+    stream: false,
+    format: "json",
   });
 
-  if (!response.ok) {
-    throw new Error(`Ollama a répondu HTTP ${response.status}`);
-  }
+  const timeout = 15 * 60 * 1000;
 
-  return await response.json();
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        host: "localhost",
+        port: 11434,
+        path: "/api/generate",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+        },
+        timeout,
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf-8");
+          if (res.statusCode !== 200) {
+            reject(new Error(`Ollama a répondu HTTP ${res.statusCode} : ${raw.slice(0, 200)}`));
+            return;
+          }
+          try {
+            resolve(JSON.parse(raw));
+          } catch {
+            reject(new Error("Réponse Ollama illisible"));
+          }
+        });
+      },
+    );
+
+    req.setTimeout(timeout, () => {
+      req.destroy(new Error("Ollama a dépassé le délai d'analyse"));
+    });
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
 };
 
 const extraireJson = (texte) => {
