@@ -48,9 +48,9 @@ SONDE_PIN = 17       # BCM 17 (Broche physique 11) - Sonde niveau d'eau
 RELAY_ACTIVE_LOW = False
 
 # Sonde : Niveau logique quand l'eau est DÉTECTÉE
-# - Sur la plupart des sondes à comparateur LM393 : sortie LOW (0) quand immergée
-# - Si votre sonde renvoie 1 (HIGH) quand il y a de l'eau, passez cette valeur à GPIO.HIGH
-WATER_DETECTED_LEVEL = GPIO.HIGH
+# - Sortie 0 (LOW) quand le capteur est immergé dans l'eau (conducteur)
+# - Sortie 1 (HIGH) quand le capteur est à l'air libre (sec)
+WATER_DETECTED_LEVEL = GPIO.LOW
 
 # Temps d'arrosage pour le test (en secondes)
 DUREE_POMPAGE = 4
