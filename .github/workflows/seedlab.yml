@@ -1,0 +1,46 @@
+name: CI SeedLab
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # FRONT
+      - name: Installer les dépendances frontend
+        working-directory: seedlab-front
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: seedlab-front
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: seedlab-front
+        run: npm run build
+
+      # BACK
+      - name: Installer les dépendances backend
+        working-directory: seedlab_backend
+        run: npm ci
+
+      - name: Vérifier le backend
+        working-directory: seedlab_backend
+        run: node --check src/server.js

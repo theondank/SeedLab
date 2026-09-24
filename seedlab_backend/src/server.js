@@ -2,10 +2,13 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import { createServer } from "http";
 
 import pool from "./config/database.js";
 import authRoutes from "./routes/auth.routes.js";
 import capteurRoutes from "./routes/capteur.routes.js";
+import plantesRoutes from "./routes/plantes.routes.js";
+import { setupWebSocket } from "./ws.js";
 
 dotenv.config();
 
@@ -49,8 +52,12 @@ app.get("/api/db-test", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/capteurs", capteurRoutes);
+app.use("/api/plantes", plantesRoutes);
 
 
-app.listen(PORT, () => {
+const server = createServer(app);
+setupWebSocket(server);
+
+server.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
 });

@@ -18,6 +18,36 @@ export const routes: RouteObject[] = [
           const { default: Dashboard } = await import('./Dashboard/dashome')
           return { Component: Dashboard }
         },
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { default: Home } = await import('./Dashboard/home')
+              return { Component: Home }
+            },
+          },
+          {
+            path: 'plantes',
+            lazy: async () => {
+              const { default: Plants } = await import('./Dashboard/plantes')
+              return { Component: Plants }
+            },
+          },
+          {
+            path: 'parametres',
+            lazy: async () => {
+              const { default: Parameters } = await import('./Dashboard/parametres')
+              return { Component: Parameters }
+            },
+          },
+          {
+            path: 'capteurs',
+            lazy: async () => {
+              const { default: Sensors } = await import('./Dashboard/sensor')
+              return { Component: Sensors }
+            },
+          },
+        ],
       },
       { path: '*', element: <NotFound /> },
     ],
