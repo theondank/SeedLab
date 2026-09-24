@@ -1,7 +1,7 @@
 import pool from "../config/database.js";
 
 const mapPlant = (plant) => ({
-  id: plant.id,
+  id: plant.id_plants,
   nom: plant.nom,
   temperature: Number(plant.temperature),
   humidite: Number(plant.humidite),
@@ -14,7 +14,7 @@ const mapPlant = (plant) => ({
 export const listPlants = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT * FROM plants WHERE temperature IS NULL AND humidite IS NULL ORDER BY id DESC",
+      "SELECT * FROM plants WHERE temperature IS NULL AND humidite IS NULL ORDER BY id_plants DESC",
     );
 
     return res.json({ plantes: rows.map(mapPlant) });
@@ -38,7 +38,7 @@ export const createPlant = async (req, res) => {
     );
 
     const [[plant]] = await pool.query(
-      "SELECT * FROM plants WHERE id = ?",
+      "SELECT * FROM plants WHERE id_plants = ?",
       [result.insertId],
     );
 
