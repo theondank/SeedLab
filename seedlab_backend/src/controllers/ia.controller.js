@@ -6,6 +6,8 @@ const CAMERA_STREAM_URL =
   process.env.CAMERA_STREAM_URL || "http://10.0.3.94:81/stream";
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5vl:3b";
+const IA_INTERVAL_MS =
+  (Number(process.env.IA_INTERVAL_HEURES) || 2) * 60 * 60 * 1000;
 
 let dernierDiagnostic = {
   etat: undefined,
@@ -148,6 +150,13 @@ export const analyser = async (req, res) => {
     return res.json({ success: true, statut: "en_cours" });
   }
 
+  res.json({ success: true, statut: "en_cours" });
+  void lancerAnalyse();
+};
+
+export const lancerAnalyse = async () => {
+  if (analyseEnCours) return;
+
   analyseEnCours = true;
   dernierDiagnostic = {
     etat: undefined,
@@ -159,8 +168,6 @@ export const analyser = async (req, res) => {
     statut: "en_cours",
   };
   broadcast({ type: "ia:diagnostic", data: dernierDiagnostic });
-
-  res.json({ success: true, statut: "en_cours" });
 
   try {
     const image = await grabJpegFrame(CAMERA_STREAM_URL);
@@ -200,6 +207,9 @@ export const analyser = async (req, res) => {
       date: new Date().toISOString(),
       statut: "pret",
     };
+    console.log(
+      `[IA] Analyse automatique terminée : ${dernierDiagnostic.etat} (${new Date(dernierDiagnostic.date).toLocaleString("fr-FR")})`,
+    );
   } catch (error) {
     console.error("Erreur analyse IA :", error);
     dernierDiagnostic = {
@@ -212,6 +222,12 @@ export const analyser = async (req, res) => {
     analyseEnCours = false;
     broadcast({ type: "ia:diagnostic", data: dernierDiagnostic });
   }
+};
+
+export const demarrerAnalysePeriodique = () => {
+  const heures = (IA_INTERVAL_MS / 3_600_000).toLocaleString("fr-FR");
+  console.log(`[IA] Analyse automatique programmée toutes les ${heures} h`);
+  setInterval(() => void lancerAnalyse(), IA_INTERVAL_MS);
 };
 
 export const getDiagnostic = async (req, res) => {

@@ -10,6 +10,7 @@ import capteurRoutes from "./routes/capteur.routes.js";
 import plantesRoutes from "./routes/plantes.routes.js";
 import iaRoutes from "./routes/ia.routes.js";
 import { setupWebSocket } from "./ws.js";
+import { demarrerAnalysePeriodique } from "./controllers/ia.controller.js";
 
 dotenv.config();
 
@@ -59,6 +60,7 @@ app.use("/api/ia", iaRoutes);
 
 const server = createServer(app);
 setupWebSocket(server);
+demarrerAnalysePeriodique();
 
 server.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
